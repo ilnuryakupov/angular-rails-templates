@@ -56,7 +56,7 @@ module AngularRailsTemplates
         locals[:html][locale] = escape_javascript(input[:data][locale].chomp)
 
         locals[:angular_template_names] ||= {}
-        locals[:angular_template_names][locale] = localized_template_name(scope, locale)
+        locals[:angular_template_names][locale] = localized_template_name(input[:name], locale)
       end
 
       AngularJsTemplateWrapper.render(nil, locals)
