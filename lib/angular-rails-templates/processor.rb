@@ -34,6 +34,11 @@ module AngularRailsTemplates
       "#{path}.#{config.extension}"
     end
 
+    def localized_template_name(name, locale)
+      path = name.sub(/^#{config.ignore_prefix.join('|')}/, '')
+      "#{path}-#{locale}.#{config.extension}"
+    end
+
     def call(input)
       file_path = Pathname.new(input[:filename]).relative_path_from(Rails.root).to_s
 
@@ -46,7 +51,13 @@ module AngularRailsTemplates
       locals[:angular_module] = config.module_name
       locals[:source_file] = "#{input[:filename]}".sub(/^#{Rails.root}\//,'')
 
-      locals[:html] = escape_javascript(input[:data].chomp)
+      input[:data].keys.each do |locale|
+        locals[:html] ||= {}
+        locals[:html][locale] = escape_javascript(input[:data][locale].chomp)
+
+        locals[:angular_template_names] ||= {}
+        locals[:angular_template_names][locale] = localized_template_name(scope, locale)
+      end
 
       AngularJsTemplateWrapper.render(nil, locals)
     end

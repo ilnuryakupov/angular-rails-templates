@@ -59,11 +59,36 @@ module AngularRailsTemplates
 
       def register(env, ext)
         if ::Sprockets::VERSION.to_i < 4 # Legacy Sprockets
-          args = [".#{ext}", ::Tilt[ext]]
-          if ::Sprockets::VERSION.to_i == 3
-            args << { mime_type: "text/ng-#{ext}", silence_deprecation: true }
+          if ext.eql?('slim')
+            klass = Class.new(::Tilt[ext]) do
+              def evaluate(scope, locals, &block)
+                result = {}
+
+                current_locale = I18n.locale
+
+                I18n.available_locales.each do |loc|
+                  I18n.locale = loc
+                  result[loc] = super
+                end
+
+                I18n.locale = current_locale
+
+                result
+              end
+            end
+
+            args = [".#{ext}", klass]
+            if ::Sprockets::VERSION.to_i == 3
+              args << { mime_type: "text/ng-#{ext}", silence_deprecation: true }
+            end
+            env.register_engine(*args)
+          else
+            args = [".#{ext}", ::Tilt[ext]]
+            if ::Sprockets::VERSION.to_i == 3
+              args << { mime_type: "text/ng-#{ext}", silence_deprecation: true }
+            end
+            env.register_engine(*args)
           end
-          env.register_engine(*args)
         else
           instance.add_template(ext, ::Tilt[ext])
 
